@@ -1,0 +1,31 @@
+# .NET build çıktıları
+bin/
+obj/
+out/
+
+# Veritabanı dosyaları (gizli/lokal veri)
+*.db
+*.db-shm
+*.db-wal
+
+# User secrets (zaten proje dışında ama garanti olsun)
+secrets.json
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+
+# NuGet
+*.nupkg
+packages/
+
+# Loglar
+*.log
+
+# OS dosyaları
+.DS_Store
+Thumbs.db
+
+# MobileApp klasörü (ayrı repo olacak, backend repo'suna dahil etme)
+MobileApp/

@@ -1,0 +1,44 @@
+@AniKatmani.API_HostAddress = http://localhost:5059
+
+
+### 1. Tüm Figürleri Listele (GET)
+GET {{AniKatmani.API_HostAddress}}/figurines
+Accept: application/json
+
+### 2. Yeni Bir Figür Ekle (POST)
+POST {{AniKatmani.API_HostAddress}}/figurines
+Content-Type: application/json
+
+{
+  "name": "Zeytin Figürü",
+  "price": 250.0,
+  "filamentType": "PLA",
+  "scale": "1/6",
+  "printTimeInHours": 12
+}
+
+
+### Yeni Figür Ekle (POST)
+POST http://localhost:5059/figurines
+Content-Type: application/json
+
+{
+  "name": "Zeytin Kedi Figürü",
+  "price": 350.0,
+  "filamentType": "PLA",
+  "scale": "1/6",
+  "printTimeInHours": 12
+}
+
+### Yeni Resimli Figür Ekle (POST)
+POST http://localhost:5059/figurines
+Content-Type: application/json
+
+{
+  "name": "Zeytin Kedi Figürü",
+  "price": 350.0,
+  "filamentType": "Reçine",
+  "scale": "1/6",
+  "printTimeInHours": 12,
+  "imageUrl": "https://images.unsplash.com/photo-1618365908648-e71bd5716cba?auto=format&fit=crop&w=500&q=60"
+}
