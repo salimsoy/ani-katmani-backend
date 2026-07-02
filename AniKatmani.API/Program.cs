@@ -19,6 +19,7 @@ builder.Services.AddScoped<FigurineService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<FavoriteService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -54,4 +55,5 @@ app.MapFigurinesEndpoints(); // Endpointleri kaydediyoruz
 app.MapCartEndpoints();
 app.MapOrderEndpoints();
 app.MapAuthEndpoints(); // Auth endpointlerini kaydediyoruz
+app.MapFavoriteEndpoints();
 app.Run();
