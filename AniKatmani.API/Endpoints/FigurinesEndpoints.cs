@@ -44,12 +44,33 @@ public static class FigurinesEndpoints
         .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // DELETE /figurines/{id} — sadece admin
-        group.MapDelete("/{id:int}", async (int id, FigurineService service) =>
+        group.MapDelete("/{id:int}", async (int id,IWebHostEnvironment env, FigurineService service) =>
         {
-            var success = await service.DeleteFigurineAsync(id);
+            var success = await service.DeleteFigurineAsync(id, env.WebRootPath);
             if (!success) return Results.NotFound("Figür bulunamadı.");
             return Results.Ok(new { message = "Figür silindi." });
         })
         .RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        group.MapPost("/upload", async (IFormFile file, IWebHostEnvironment env, HttpContext httpContext, FigurineService service) =>
+        {
+            if (file == null || file.Length == 0)
+            {
+                return Results.BadRequest("Dosya seçilmedi.");
+            }
+
+            try
+            {
+                var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+                var imageUrl = await service.UploadImageAsync(file, env.WebRootPath, baseUrl);
+                return Results.Ok(new { imageUrl });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(ex.Message);
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Admin"))
+        .DisableAntiforgery();
     }
 }

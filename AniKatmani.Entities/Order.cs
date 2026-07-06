@@ -19,4 +19,10 @@ public class Order
     public List<OrderItem> OrderItems { get; set; } = new();
 
     public User? User { get; set; } // Siparişi veren kullanıcı ile ilişki
+
+    public int? CouponId { get; set; } // Kullanılan kuponun ID'si (varsa)
+
+    public Coupon? Coupon { get; set; } // Kullanılan kupon ile ilişki
+
+    public decimal DiscountAmount { get; set; } = 0m; // Kupon indirimi miktarı (varsa)
 }

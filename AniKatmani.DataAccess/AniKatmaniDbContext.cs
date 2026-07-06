@@ -15,11 +15,17 @@ public class AniKatmaniDbContext : DbContext
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<FavoriteItem> FavoriteItems { get; set; }
+        public DbSet<Coupon> Coupons { get; set; }
+        public DbSet<CouponUsage> CouponUsages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
                 modelBuilder.Entity<User>()
                         .HasIndex(u => u.Email)
+                        .IsUnique();
+                
+                modelBuilder.Entity<Coupon>()
+                        .HasIndex(c => c.Code)
                         .IsUnique();
                 
                 modelBuilder.Entity<User>()

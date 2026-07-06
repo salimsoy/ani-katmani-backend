@@ -7,13 +7,15 @@ namespace AniKatmani.Business;
 public class OrderService
 {
     private readonly AniKatmaniDbContext _dbContext;
+    private readonly CouponService _couponService;
 
-    public OrderService(AniKatmaniDbContext dbContext)
+    public OrderService(AniKatmaniDbContext dbContext, CouponService couponService)
     {
         _dbContext = dbContext;
+        _couponService = couponService;
     }
 
-    public async Task<Order?> CreateOrderAsync(string fullName, string address, string phoneNumber, int userId)
+    public async Task<Order?> CreateOrderAsync(string fullName, string address, string phoneNumber, int userId, string? couponCode)
     {
         var cartItems = await _dbContext.CartItems
             .Where(c => c.UserId == userId)
@@ -26,6 +28,22 @@ public class OrderService
         }
 
         var totalPrice = cartItems.Sum(c => c.Figurine!.Price * c.Quantity);
+
+        int? couponId = null;
+        decimal discountAmount = 0m;
+
+        if(!string.IsNullOrEmpty(couponCode))
+        {
+            var (isValid, message, coupon) = await _couponService.ValidateCouponAsync(couponCode, userId, totalPrice);
+
+            if (!isValid)
+            {
+                throw new InvalidOperationException(message);
+            }
+            couponId = coupon!.Id;
+            discountAmount = _couponService.CalculateDiscount(coupon!, totalPrice);
+            totalPrice -= discountAmount;
+        }
 
         var order = new Order
         {   
@@ -40,14 +58,26 @@ public class OrderService
                 FigurineId = c.FigurineId,
                 Quantity = c.Quantity,
                 UnitPrice = c.Figurine!.Price
-            }).ToList()
+            }).ToList(),
+            CouponId = couponId,
+            DiscountAmount = discountAmount
         };
 
         _dbContext.Orders.Add(order);
         _dbContext.CartItems.RemoveRange(cartItems);
 
+        if (couponId.HasValue)
+        {
+            _dbContext.CouponUsages.Add(new CouponUsage
+        {
+            CouponId = couponId.Value,
+            UserId = userId
+        });
+        }
+
         await _dbContext.SaveChangesAsync();
         return order;
+        
     }
 
     public async Task<List<Order>> GetAllOrdersAsync(int userId)

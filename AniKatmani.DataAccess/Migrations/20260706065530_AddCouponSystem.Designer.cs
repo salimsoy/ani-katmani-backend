@@ -3,6 +3,7 @@ using System;
 using AniKatmani.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AniKatmani.DataAccess.Migrations
 {
     [DbContext(typeof(AniKatmaniDbContext))]
-    partial class AniKatmaniDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260706065530_AddCouponSystem")]
+    partial class AddCouponSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
@@ -65,9 +68,6 @@ namespace AniKatmani.DataAccess.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("MinimumCartAmount")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 

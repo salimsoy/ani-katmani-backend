@@ -1,6 +1,7 @@
 using AniKatmani.DataAccess;
 using AniKatmani.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 
 namespace AniKatmani.Business;
 public class FigurineService
@@ -45,14 +46,44 @@ public class FigurineService
         return figurine;
     }
 
-    public async Task<bool> DeleteFigurineAsync(int id)
+    public async Task<bool> DeleteFigurineAsync(int id, string webRootPath)
     {
         var figurine = await _dbContext.Figurines.FindAsync(id);
         if (figurine == null) return false;
-
+        if (!string.IsNullOrEmpty(figurine.ImageUrl))
+        {
+            string fileName = Path.GetFileName(figurine.ImageUrl);
+            var filePath = Path.Combine(webRootPath, "uploads", fileName);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+        }
         _dbContext.Figurines.Remove(figurine);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<string> UploadImageAsync(IFormFile file, string webRootPath, string baseUrl)
+    {
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+        var extension = Path.GetExtension(file.FileName).ToLower();
+
+        if (!allowedExtensions.Contains(extension))
+        {
+            throw new InvalidOperationException("Sadece jpg, jpeg, png dosyaları yüklenebilir.");
+        }
+
+        var fileName = $"{Guid.NewGuid()}{extension}";
+        var uploadsPath = Path.Combine(webRootPath, "uploads");
+        var filePath = Path.Combine(uploadsPath, fileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        return $"{baseUrl}/uploads/{fileName}";
     }
 
 

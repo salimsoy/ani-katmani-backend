@@ -20,6 +20,7 @@ builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<FavoriteService>();
+builder.Services.AddScoped<CouponService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -46,6 +47,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -56,4 +58,5 @@ app.MapCartEndpoints();
 app.MapOrderEndpoints();
 app.MapAuthEndpoints(); // Auth endpointlerini kaydediyoruz
 app.MapFavoriteEndpoints();
+app.MapCouponEndpoints();
 app.Run();

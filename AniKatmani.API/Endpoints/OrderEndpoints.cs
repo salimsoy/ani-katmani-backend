@@ -12,14 +12,29 @@ public static class OrderEndpoints
         {
             var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var userId = int.Parse(userIdClaim!);
-            var order = await orderService.CreateOrderAsync(dto.FullName, dto.Address, dto.PhoneNumber, userId);
 
-            if (order == null)
+            try
             {
-                return Results.BadRequest("Sepetiniz boş, sipariş oluşturulamaz.");
-            }
+                var order = await orderService.CreateOrderAsync(dto.FullName, dto.Address, dto.PhoneNumber, userId, dto.CouponCode);
 
-            return Results.Json(new { message = "Siparişiniz alındı!", orderId = order.Id }, statusCode: 201);
+                if (order == null)
+                {
+                    return Results.BadRequest("Sepetiniz boş, sipariş oluşturulamaz.");
+                }
+
+                return Results.Json(new
+                {
+                    message = "Siparişiniz alındı!",
+                    orderId = order.Id,
+                    originalPrice = order.TotalPrice + order.DiscountAmount,
+                    discountAmount = order.DiscountAmount,
+                    totalPrice = order.TotalPrice
+                }, statusCode: 201);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(ex.Message);
+            }
         })
         .RequireAuthorization();
 
