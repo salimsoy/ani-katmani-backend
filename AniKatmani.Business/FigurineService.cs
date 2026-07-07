@@ -20,9 +20,58 @@ public class FigurineService
         return newFigurine;
     }
 
-    public async Task<List<Figurine>> GetAllFigurinesAsync()
+    public async Task<(List<Figurine> Items, int TotalCount)> GetFilteredFigurinesAsync(
+        string? search,
+        string? filamentType,
+        decimal? minPrice,
+        decimal? maxPrice,
+        string? sortBy,
+        int page,
+        int pageSize)
     {
-        return await _dbContext.Figurines.AsNoTracking().ToListAsync();
+        var query = _dbContext.Figurines.AsQueryable();
+
+        // 1. Arama filtresi (isim veya filament tipinde geçiyor mu)
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(f => f.Name.Contains(search) || f.FilamentType.Contains(search));
+        }
+
+        // 2. Filament tipi filtresi
+        if (!string.IsNullOrEmpty(filamentType) && filamentType != "Tümü")
+        {
+            query = query.Where(f => f.FilamentType == filamentType);
+        }
+
+        // 3. Fiyat aralığı filtresi
+        if (minPrice.HasValue)
+        {
+            query = query.Where(f => f.Price >= minPrice.Value);
+        }
+        if (maxPrice.HasValue)
+        {
+            query = query.Where(f => f.Price <= maxPrice.Value);
+        }
+
+        // 4. TotalCount - filtrelerden SONRA, sayfalamadan ÖNCE sayılıyor
+        var totalCount = await query.CountAsync();
+
+        // 5. Sıralama
+        query = sortBy switch
+        {
+            "priceAsc" => query.OrderBy(f => f.Price),
+            "priceDesc" => query.OrderByDescending(f => f.Price),
+            "nameAsc" => query.OrderBy(f => f.Name),
+            _ => query.OrderBy(f => f.Id)
+        };
+
+        // 6. Sayfalama (Skip/Take)
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
     }
 
     public async Task<Figurine?> GetFigurineByIdAsync(int id)

@@ -64,5 +64,20 @@ public static class OrderEndpoints
             return Results.Ok(new { message = "sipariş durumu güncellendi.", status = order.Status });
         })
         .RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        app.MapGet("/orders/{id}", async (int id, OrderService orderService, HttpContext httpContext) =>
+        {
+            var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = int.Parse(userIdClaim!);
+            var order = await orderService.GetOrderByIdAsync(id, userId);
+
+            if (order == null)
+            {
+                return Results.NotFound("Sipariş bulunamadı.");
+            }
+
+            return Results.Ok(order);
+        })
+        .RequireAuthorization();
     }
 }

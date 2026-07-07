@@ -109,4 +109,15 @@ public class OrderService
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync();
     }
+
+    public async Task<Order?> GetOrderByIdAsync(int orderId, int userId)
+    {
+        var order = await _dbContext.Orders
+            .Where(o => o.Id == orderId && o.UserId == userId)
+            .Include(o => o.OrderItems)
+            .ThenInclude(oi => oi.Figurine)
+            .FirstOrDefaultAsync();
+
+        return order;
+    }
 }

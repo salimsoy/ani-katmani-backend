@@ -12,10 +12,28 @@ public static class FigurinesEndpoints
         var group = app.MapGroup("/figurines").WithTags("Figurines");
 
         // GET /figurines — herkese açık
-        group.MapGet("/", async (FigurineService service) =>
+        group.MapGet("/", async (
+            string? search,
+            string? filamentType,
+            decimal? minPrice,
+            decimal? maxPrice,
+            string? sortBy,
+            FigurineService service,
+            int page = 1,
+            int pageSize = 20) =>
         {
-            var figurines = await service.GetAllFigurinesAsync();
-            return Results.Ok(figurines);
+            var (items, totalCount) = await service.GetFilteredFigurinesAsync(
+                search, filamentType, minPrice, maxPrice, sortBy, page, pageSize);
+
+            var response = new
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            return Results.Ok(response);
         });
 
         // GET /figurines/{id} — herkese açık
