@@ -85,4 +85,31 @@ public class CouponService
         return true;
         
     }
+
+    public async Task<Coupon?> UpdateCouponAsync(int id, Coupon updatedData)
+    {   
+        
+        var coupon = await _dbContext.Coupons.FindAsync(id);
+        if (coupon == null) return null;
+
+        // Kupon kodu değiştiriliyorsa, yeni kodun mevcut olmadığını kontrol et
+        if (coupon.Code != updatedData.Code)
+        {
+            var existingCoupon = await _dbContext.Coupons.FirstOrDefaultAsync(c => c.Code == updatedData.Code);
+            if (existingCoupon != null)
+            {
+                throw new InvalidOperationException("Bu kupon kodu zaten mevcut.");
+            }
+        }
+
+        coupon.Code = updatedData.Code;
+        coupon.DiscountType = updatedData.DiscountType;
+        coupon.DiscountValue = updatedData.DiscountValue;
+        coupon.MinimumCartAmount = updatedData.MinimumCartAmount;
+        coupon.IsActive = updatedData.IsActive;
+        coupon.ExpiryDate = updatedData.ExpiryDate;
+
+        await _dbContext.SaveChangesAsync();
+        return coupon;
+    }
 }

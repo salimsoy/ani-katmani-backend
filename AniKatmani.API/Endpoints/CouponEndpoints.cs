@@ -74,5 +74,31 @@ public static class CouponEndpoints
             return Results.Ok(new { message = "Kupon silindi." });
         })
         .RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        app.MapPut("/coupons/{id:int}", async (int id, UpdateCouponDto dto, CouponService service) =>
+        {
+            var updatedCoupon = new Coupon
+            {
+                Id = id,
+                Code = dto.Code,
+                DiscountType = dto.DiscountType,
+                DiscountValue = dto.DiscountValue,
+                MinimumCartAmount = dto.MinimumCartAmount,
+                ExpiryDate = dto.ExpiryDate,
+                IsActive = dto.IsActive
+            };
+
+            try
+            {
+                var coupon = await service.UpdateCouponAsync(id, updatedCoupon);
+                if (coupon == null) return Results.NotFound("Kupon bulunamadı.");
+                return Results.Ok(coupon);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(ex.Message);
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Admin"));
     }
 }

@@ -34,7 +34,7 @@ public class FigurineService
         // 1. Arama filtresi (isim veya filament tipinde geçiyor mu)
         if (!string.IsNullOrEmpty(search))
         {
-            query = query.Where(f => f.Name.Contains(search) || f.FilamentType.Contains(search));
+            query = query.Where(f => EF.Functions.Like(f.Name, $"%{search}%") || EF.Functions.Like(f.FilamentType, $"%{search}%"));
         }
 
         // 2. Filament tipi filtresi
