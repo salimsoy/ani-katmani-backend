@@ -15,7 +15,7 @@ public static class OrderEndpoints
 
             try
             {
-                var order = await orderService.CreateOrderAsync(dto.FullName, dto.Address, dto.PhoneNumber, userId, dto.CouponCode);
+                var order = await orderService.CreateOrderAsync(dto.FullName, dto.Address, dto.PhoneNumber, userId, dto.CouponCode, dto.ShippingOptionId);
 
                 if (order == null)
                 {
@@ -79,5 +79,40 @@ public static class OrderEndpoints
             return Results.Ok(order);
         })
         .RequireAuthorization();
+
+        app.MapPost("/orders/guest", async (CreateGuestOrderDto dto, OrderService orderService) =>
+        {
+            try
+            {
+                var order = await orderService.CreateGuestOrderAsync(
+                    dto.FullName,
+                    dto.Address,
+                    dto.PhoneNumber,
+                    dto.Email,
+                    dto.ShippingOptionId,
+                    dto.CartItems.Select(c => new AniKatmani.Business.Dto.GuestCartItemDto
+                    {
+                        FigurineId = c.FigurineId,
+                        Quantity = c.Quantity
+                    }).ToList()
+                );
+
+                if (order == null)
+                {
+                    return Results.BadRequest("Sepetiniz boş, sipariş oluşturulamaz.");
+                }
+
+                return Results.Json(new
+                {
+                    message = "Siparişiniz alındı!",
+                    orderId = order.Id,
+                    totalPrice = order.TotalPrice
+                }, statusCode: 201);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(ex.Message);
+            }
+        });
     }
 }

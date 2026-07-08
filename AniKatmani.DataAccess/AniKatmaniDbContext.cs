@@ -17,6 +17,7 @@ public class AniKatmaniDbContext : DbContext
         public DbSet<FavoriteItem> FavoriteItems { get; set; }
         public DbSet<Coupon> Coupons { get; set; }
         public DbSet<CouponUsage> CouponUsages { get; set; }
+        public DbSet<ShippingOption> ShippingOptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

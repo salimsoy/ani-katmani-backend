@@ -34,3 +34,6 @@ okuma.txt
 
 wwwroot/uploads/*
 !wwwroot/uploads/.gitkeep
+
+AniKatmani.API/wwwroot/uploads/*
+!AniKatmani.API/wwwroot/uploads/.gitkeep

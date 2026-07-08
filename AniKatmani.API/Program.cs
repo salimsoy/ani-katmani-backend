@@ -21,6 +21,7 @@ builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<FavoriteService>();
 builder.Services.AddScoped<CouponService>();
+builder.Services.AddScoped<ShippingService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -45,9 +46,20 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("WebApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 app.UseStaticFiles();
+app.UseCors("WebApp");
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -59,4 +71,5 @@ app.MapOrderEndpoints();
 app.MapAuthEndpoints(); // Auth endpointlerini kaydediyoruz
 app.MapFavoriteEndpoints();
 app.MapCouponEndpoints();
+app.MapShippingEndpoints();
 app.Run();

@@ -1,6 +1,7 @@
 using AniKatmani.DataAccess;
 using AniKatmani.Entities;
 using Microsoft.EntityFrameworkCore;
+using AniKatmani.Business.Dto;
 
 namespace AniKatmani.Business;
 
@@ -9,13 +10,14 @@ public class OrderService
     private readonly AniKatmaniDbContext _dbContext;
     private readonly CouponService _couponService;
 
+
     public OrderService(AniKatmaniDbContext dbContext, CouponService couponService)
     {
         _dbContext = dbContext;
         _couponService = couponService;
     }
 
-    public async Task<Order?> CreateOrderAsync(string fullName, string address, string phoneNumber, int userId, string? couponCode)
+    public async Task<Order?> CreateOrderAsync(string fullName, string address, string phoneNumber, int userId, string? couponCode, int shippingOptionId)
     {
         var cartItems = await _dbContext.CartItems
             .Where(c => c.UserId == userId)
@@ -45,6 +47,14 @@ public class OrderService
             totalPrice -= discountAmount;
         }
 
+        var selectedShippingOption = await _dbContext.ShippingOptions
+            .FirstOrDefaultAsync(s => s.Id == shippingOptionId && s.IsActive);
+        if (selectedShippingOption == null)
+        {
+            throw new InvalidOperationException("Seçilen kargo seçeneği geçerli değil.");
+        }
+        totalPrice += selectedShippingOption.Price;
+
         var order = new Order
         {   
             UserId = userId,
@@ -60,7 +70,10 @@ public class OrderService
                 UnitPrice = c.Figurine!.Price
             }).ToList(),
             CouponId = couponId,
-            DiscountAmount = discountAmount
+            DiscountAmount = discountAmount,
+            ShippingOptionId = selectedShippingOption.Id,
+            ShippingCost = selectedShippingOption.Price
+
         };
 
         _dbContext.Orders.Add(order);
@@ -120,4 +133,51 @@ public class OrderService
 
         return order;
     }
+
+    public async Task<Order?> CreateGuestOrderAsync(string fullName, string address, string phoneNumber, string email, int shippingOptionId, List<GuestCartItemDto> cartItems)
+    {
+        if (cartItems.Count == 0)
+        {
+            return null; // Sepet boş, sipariş oluşturulamaz
+        }
+
+        var cartItemFigurineIds = cartItems.Select(c => c.FigurineId).ToList();
+        var figurines = await _dbContext.Figurines.Where(f => cartItemFigurineIds.Contains(f.Id)).ToListAsync();
+        if (figurines.Count != cartItemFigurineIds.Count)
+        {
+            throw new InvalidOperationException("Sepetteki bazı figürinler geçerli değil.");
+        }
+
+        var totalPrice = cartItems.Sum(c => figurines.First(f => f.Id == c.FigurineId).Price * c.Quantity);
+
+        var selectedShippingOption = await _dbContext.ShippingOptions
+            .FirstOrDefaultAsync(s => s.Id == shippingOptionId && s.IsActive);
+        if (selectedShippingOption == null)
+        {
+            throw new InvalidOperationException("Seçilen kargo seçeneği geçerli değil.");
+        }
+        totalPrice += selectedShippingOption.Price;
+
+        var order = new Order
+        {
+            FullName = fullName,
+            Address = address,
+            PhoneNumber = phoneNumber,
+            Email = email,
+            TotalPrice = totalPrice,
+            Status = "Beklemede",
+            OrderItems = cartItems.Select(c => new OrderItem
+            {
+                FigurineId = c.FigurineId,
+                Quantity = c.Quantity,
+                UnitPrice = figurines.First(f => f.Id == c.FigurineId).Price
+            }).ToList(),
+            ShippingOptionId = selectedShippingOption.Id,
+            ShippingCost = selectedShippingOption.Price
+        };
+
+        _dbContext.Orders.Add(order);
+        await _dbContext.SaveChangesAsync();
+        return order;
+    } 
 }
